@@ -1,15 +1,679 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="robots" content="noindex,nofollow">
-<title>Golden Crumpets · pfp.wick.pics</title>
-<script>
-  // Bounce to root, preserving the gold preset via query param. The main page
-  // also matches by URL slug, so this stays robust if someone shares the URL.
-  location.replace('/?style=gold');
-</script>
-<noscript><meta http-equiv="refresh" content="0;url=/?style=gold"></noscript>
+  <meta charset="UTF-8">
+  <title>ULTIMATE COMMUNITY PFP RING GENERATOR | WICK.PICS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bungee+Shade&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐸</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1c24;
+      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+    a.back {
+      display: inline-block;
+      color: #888;
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 20px 24px;
+      transition: color 0.2s;
+    }
+    a.back:hover { color: #0f0; }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+    h1 {
+      font-family: 'Bungee Shade', cursive;
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      color: #0f0;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 32px;
+    }
+
+    /* Drop zone */
+    .dropzone {
+      border: 2px dashed rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.02);
+    }
+    .dropzone:hover, .dropzone.active {
+      border-color: rgba(0,255,0,0.4);
+      background: rgba(0,255,0,0.03);
+    }
+    .dropzone-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+    .dropzone-text { color: #888; font-size: 0.85rem; }
+    .dropzone-hint { color: #555; font-size: 0.75rem; margin-top: 6px; }
+
+    /* Preview */
+    .preview-area {
+      display: none;
+      text-align: center;
+      margin-top: 24px;
+    }
+    .preview-area.show { display: block; }
+    .canvas-wrap {
+      display: inline-block;
+      box-shadow: 0 0 40px rgba(0,255,0,0.15), 0 0 80px rgba(0,255,0,0.05);
+    }
+    canvas { display: block; cursor: grab; }
+    canvas.dragging { cursor: grabbing; }
+
+    /* Shape toggle */
+    .shape-toggle {
+      display: flex;
+      gap: 6px;
+    }
+    .shape-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: #888;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .shape-btn:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+    .shape-btn.active { border-color: #0f0; color: #0f0; background: rgba(0,255,0,0.08); }
+
+    /* Controls */
+    .controls {
+      display: none;
+      margin-top: 24px;
+      padding: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+    }
+    .controls.show { display: block; }
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .control-row:last-child { margin-bottom: 0; }
+    .control-label { color: #999; font-size: 0.8rem; }
+    .control-label span { color: #ccc; font-weight: 600; }
+    .zoom-preset-btn {
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent;
+      color: #aaa;
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    .zoom-preset-btn:hover { border-color: #0f0; color: #0f0; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 180px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #0f0;
+      cursor: pointer;
+    }
+
+    /* Style picker */
+    .style-pills {
+      display: flex;
+      gap: 8px;
+    }
+    .style-pill {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .style-pill:hover { transform: scale(1.15); }
+    .style-pill.active { border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+
+    /* Buttons */
+    .actions {
+      display: none;
+      margin-top: 20px;
+      gap: 12px;
+      justify-content: center;
+    }
+    .actions.show { display: flex; }
+    .btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #0f0;
+      color: #000;
+    }
+    .btn-primary:hover { background: #3f3; transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: #ccc;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    /* Troll Box pointer — community ideas moved to crypto.wick.pics/troll 2026-05-18 */
+    .troll-pointer {
+      margin-top: 40px;
+      padding: 18px 22px;
+      background: linear-gradient(180deg, rgba(60,40,18,0.5) 0%, rgba(30,20,10,0.4) 100%);
+      border: 1px solid rgba(201,168,107,0.25);
+      border-radius: 10px;
+      text-align: center;
+      color: #c9a86b;
+    }
+    .troll-pointer h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+      color: #c9a86b;
+    }
+    .troll-pointer p { font-size: 0.78rem; color: #8a7a55; margin-bottom: 10px; }
+    .troll-pointer a {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: rgba(107,74,31,0.4);
+      border: 1px solid rgba(201,168,107,0.4);
+      color: #d4cfb6;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .troll-pointer a:hover { background: rgba(107,74,31,0.6); }
+  </style>
 </head>
-<body></body>
+<body>
+  <div style="width:100%;padding:6px 12px;background:linear-gradient(90deg,#0d9488,#065f46);font-family:sans-serif;box-sizing:border-box;">
+    <div style="max-width:720px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:4px;">
+        <a href="https://crypto.wick.pics" style="font-size:13px;font-weight:500;letter-spacing:0.3px;color:#d1fae5;text-decoration:none;"><span style="opacity:0.75">Powered by</span> <b>Green Wick</b> <span style="opacity:0.75">Cryptocurrency</span></a>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
+        <a href="https://wick.pics" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;background:rgba(255,255,255,0.12);color:#d1fae5;text-decoration:none;">&larr; Back to WICK Agent Hub</a>
+        <a href="https://greenwick.tiiny.site/#join" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;background:rgba(255,255,255,0.18);color:#ecfdf5;text-decoration:none;">Buy $WICK &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" style="margin-top:24px;">
+    <h1>ULTIMATE COMMUNITY PFP RING GENERATOR</h1>
+    <p class="subtitle">Community-powered ring generator &mdash; suggest new styles below</p>
+
+    <!-- Drop Zone -->
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-icon">&#x1F5BC;</div>
+      <p class="dropzone-text">Drop your image here or click to browse</p>
+      <p class="dropzone-hint">PNG, JPG, WebP &mdash; outputs 1024x1024</p>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-area" id="previewArea">
+      <div class="canvas-wrap">
+        <canvas id="canvas" width="400" height="400"></canvas>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls" id="controls">
+      <div class="control-row">
+        <span class="control-label">Thickness <span id="thickVal">5%</span></span>
+        <input type="range" id="thickness" min="2" max="12" value="5" step="0.5">
+      </div>
+      <div class="control-row">
+        <span class="control-label">Rotate <span id="rotateVal">0&deg;</span></span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="range" id="rotate" min="0" max="360" value="0" step="1" style="flex:1;">
+          <button class="zoom-preset-btn" id="rotateReset">Reset</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <span class="control-label">Zoom <span id="zoomVal">100%</span></span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="range" id="zoom" min="80" max="150" value="100" style="flex:1;">
+          <button class="zoom-preset-btn" id="zoomReset">Reset</button>
+          <button class="zoom-preset-btn" id="zoomMax">No Gaps</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <span class="control-label">Shape</span>
+        <div class="shape-toggle" id="shapeToggle">
+          <button class="shape-btn active" data-shape="circle">
+            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            Circle
+          </button>
+          <button class="shape-btn" data-shape="hexagon">
+            <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="3.5,0.5 10.5,0.5 13.5,7 10.5,13.5 3.5,13.5 0.5,7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            Hexagon
+          </button>
+          <button class="shape-btn" data-shape="square">
+            <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            Square
+          </button>
+        </div>
+      </div>
+      <div class="control-row">
+        <span class="control-label">Community</span>
+        <div class="style-pills" id="stylePills">
+          <div class="style-pill active" data-style="wick" style="background: conic-gradient(#0a5c1a, #10b840, #1a4d2e, #22c55e, #0a5c1a);" title="Green Wick"></div>
+          <div class="style-pill" data-style="fire" style="background: conic-gradient(#f80, #f00, #ff0, #f80);" title="Fire"></div>
+          <div class="style-pill" data-style="ice" style="background: conic-gradient(#0af, #08f, #0ff, #0af);" title="Ice"></div>
+          <div class="style-pill" data-style="tang" style="background: conic-gradient(#FF6B00, #FF8C00, #FFA500, #FF4500, #FF6B00);" title="Tang Gang"></div>
+          <div class="style-pill" data-style="pulse" style="background: conic-gradient(#00A8FF, #0055FF, #5500FF, #9933FF, #00A8FF);" title="PulseChain"></div>
+          <div class="style-pill" data-style="hex" style="background: conic-gradient(#FF00FF, #FF0033, #FF6600, #FFCC00, #FF00FF);" title="HEX"></div>
+          <div class="style-pill" data-style="gold" style="background: conic-gradient(#fff5d0 0%, #ffe089 5%, #e8b234 12%, #b07710 20%, #6a4011 25%, #b07710 30%, #e8b234 38%, #ffe089 45%, #fff5d0 50%, #ffe089 55%, #e8b234 62%, #b07710 70%, #6a4011 75%, #b07710 80%, #e8b234 88%, #ffe089 95%, #fff5d0 100%);" title="Golden Crumpets"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions" id="actions">
+      <button class="btn btn-secondary" id="resetBtn">Change Image</button>
+      <button class="btn btn-primary" id="downloadBtn">Download PFP</button>
+    </div>
+
+    <!-- Community Ideas moved to crypto.wick.pics/troll on 2026-05-18 — kept a pointer here -->
+    <div class="troll-pointer">
+      <h2>TROLL BOX</h2>
+      <p>Community ideas, hot takes, and feature requests now live under the bridge.</p>
+      <a href="https://crypto.wick.pics/troll">Visit the TROLL BOX &rarr;</a>
+    </div>
+  </div>
+
+<script>
+const SIZE = 1024;        // output resolution
+const DISPLAY = 400;      // preview size
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let sourceImg = null;
+let currentStyle = 'wick';
+
+// Deep-link: /gold (or ?style=gold) pre-selects that community. Generic so
+// other slugs (/fire, /ice, /tang, /pulse, /hex, /wick) work too.
+(function applyDeepLink() {
+  const slugFromPath = (location.pathname || '').replace(/\/+$/, '').split('/').pop().toLowerCase();
+  const slugFromQuery = (new URLSearchParams(location.search).get('style') || '').toLowerCase();
+  const want = slugFromQuery || slugFromPath;
+  if (want && Object.prototype.hasOwnProperty.call({wick:1,fire:1,ice:1,tang:1,pulse:1,hex:1,gold:1}, want)) {
+    currentStyle = want;
+  }
+})();
+let currentShape = 'circle';
+let ringPct = 5;
+let rotateDeg = 0; // conic-gradient start angle in degrees — rotates the coloring only, never the shape
+let zoomPct = 100;
+let panX = 0, panY = 0;
+let isDragging = false, dragStartX = 0, dragStartY = 0;
+
+const STYLES = {
+  wick:   [{stop:0,c:'#0a5c1a'},{stop:0.2,c:'#10b840'},{stop:0.4,c:'#1a4d2e'},{stop:0.6,c:'#22c55e'},{stop:0.8,c:'#15803d'},{stop:1,c:'#0a5c1a'}],
+  fire:   [{stop:0,c:'#ff8800'},{stop:0.25,c:'#ff0000'},{stop:0.5,c:'#ffff00'},{stop:0.75,c:'#ff4400'},{stop:1,c:'#ff8800'}],
+  ice:    [{stop:0,c:'#00aaff'},{stop:0.25,c:'#0088ff'},{stop:0.5,c:'#00ffff'},{stop:0.75,c:'#44aaff'},{stop:1,c:'#00aaff'}],
+  tang:   [{stop:0,c:'#FF6B00'},{stop:0.25,c:'#FF8C00'},{stop:0.5,c:'#FFA500'},{stop:0.75,c:'#FF4500'},{stop:1,c:'#FF6B00'}],
+  pulse:  [{stop:0,c:'#00A8FF'},{stop:0.25,c:'#0055FF'},{stop:0.5,c:'#5500FF'},{stop:0.75,c:'#9933FF'},{stop:1,c:'#00A8FF'}],
+  hex:    [{stop:0,c:'#FF00FF'},{stop:0.25,c:'#FF0033'},{stop:0.5,c:'#FF6600'},{stop:0.75,c:'#FFCC00'},{stop:1,c:'#FF00FF'}],
+  // Polished gold ring — only the outer annulus is visible, so the gradient
+  // is tuned for what the eye sees as it sweeps the rim. Two bright cream
+  // highlights at 12 and 6 o'clock, two soft dark-gold valleys at 3 and 9,
+  // and saturated rich gold (b07710 → e8b234) in between. No black shadows
+  // anywhere — the ring should read as metal at every angle.
+  gold:   [
+    {stop:0.00,c:'#fff5d0'},  // 12 o'clock — top highlight
+    {stop:0.05,c:'#ffe089'},
+    {stop:0.12,c:'#e8b234'},
+    {stop:0.20,c:'#b07710'},
+    {stop:0.25,c:'#6a4011'},  // 3 o'clock — soft valley
+    {stop:0.30,c:'#b07710'},
+    {stop:0.38,c:'#e8b234'},
+    {stop:0.45,c:'#ffe089'},
+    {stop:0.50,c:'#fff5d0'},  // 6 o'clock — bottom highlight
+    {stop:0.55,c:'#ffe089'},
+    {stop:0.62,c:'#e8b234'},
+    {stop:0.70,c:'#b07710'},
+    {stop:0.75,c:'#6a4011'},  // 9 o'clock — soft valley
+    {stop:0.80,c:'#b07710'},
+    {stop:0.88,c:'#e8b234'},
+    {stop:0.95,c:'#ffe089'},
+    {stop:1.00,c:'#fff5d0'},  // wraps back to top highlight
+  ],
+};
+
+function hexPath(ctx, cx, cy, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function render(outputSize) {
+  if (!sourceImg) return;
+  const sz = outputSize || DISPLAY;
+  canvas.width = sz;
+  canvas.height = sz;
+  ctx.clearRect(0, 0, sz, sz);
+
+  const shape = currentShape;
+  const ringW = sz * (ringPct / 100);
+  const center = sz / 2;
+  const outerR = sz / 2;
+  const innerR = outerR - ringW;
+  const sqRad = sz * 0.06; // corner radius for square shape
+
+  // Update preview shape clipping
+  if (!outputSize) {
+    const wrap = document.querySelector('.canvas-wrap');
+    if (shape === 'hexagon') {
+      wrap.style.borderRadius = '0';
+      wrap.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+      canvas.style.borderRadius = '0';
+      canvas.style.clipPath = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+    } else if (shape === 'square') {
+      wrap.style.borderRadius = '12%';
+      wrap.style.clipPath = 'none';
+      canvas.style.borderRadius = '12%';
+      canvas.style.clipPath = 'none';
+    } else {
+      wrap.style.borderRadius = '50%';
+      wrap.style.clipPath = 'none';
+      canvas.style.borderRadius = '50%';
+      canvas.style.clipPath = 'none';
+    }
+  }
+
+  // Draw gradient ring. First arg to createConicGradient is the start angle
+  // in radians. Rotating it spins the color wheel WITHOUT touching the shape
+  // path below — same clip mask, different chromatic offset.
+  const grad = ctx.createConicGradient(rotateDeg * Math.PI / 180, center, center);
+  STYLES[currentStyle].forEach(s => grad.addColorStop(s.stop, s.c));
+
+  if (shape === 'hexagon') {
+    hexPath(ctx, center, center, outerR);
+    ctx.save();
+    ctx.clip();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, sz, sz);
+    ctx.restore();
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    hexPath(ctx, center, center, innerR);
+    ctx.fill();
+    ctx.restore();
+  } else if (shape === 'square') {
+    ctx.beginPath();
+    ctx.roundRect(0, 0, sz, sz, sqRad);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.roundRect(ringW, ringW, sz - ringW * 2, sz - ringW * 2, Math.max(0, sqRad - ringW * 0.5));
+    ctx.fill();
+    ctx.restore();
+  } else {
+    ctx.beginPath();
+    ctx.arc(center, center, outerR, 0, Math.PI * 2);
+    ctx.arc(center, center, innerR, 0, Math.PI * 2, true);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  // Clip inner shape for image
+  ctx.save();
+  if (shape === 'hexagon') {
+    hexPath(ctx, center, center, innerR - 1);
+  } else if (shape === 'square') {
+    ctx.beginPath();
+    ctx.roundRect(ringW + 1, ringW + 1, sz - (ringW + 1) * 2, sz - (ringW + 1) * 2, Math.max(0, sqRad - ringW * 0.5));
+  } else {
+    ctx.beginPath();
+    ctx.arc(center, center, innerR - 1, 0, Math.PI * 2);
+  }
+  ctx.clip();
+
+  // Draw image centered, cover-fit with zoom
+  const scale = zoomPct / 100;
+  const imgAspect = sourceImg.width / sourceImg.height;
+  const fitD = innerR * 2;
+  let drawW, drawH;
+  if (imgAspect > 1) {
+    drawH = fitD * scale;
+    drawW = drawH * imgAspect;
+  } else {
+    drawW = fitD * scale;
+    drawH = drawW / imgAspect;
+  }
+  const scaledPanX = panX * (sz / DISPLAY);
+  const scaledPanY = panY * (sz / DISPLAY);
+  ctx.drawImage(sourceImg, center - drawW/2 + scaledPanX, center - drawH/2 + scaledPanY, drawW, drawH);
+  ctx.restore();
+}
+
+// File handling
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('active'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('active'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('active');
+  if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImage(e.target.files[0]); });
+
+function loadImage(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      sourceImg = img;
+      render();
+      dropzone.style.display = 'none';
+      document.getElementById('previewArea').classList.add('show');
+      document.getElementById('controls').classList.add('show');
+      document.getElementById('actions').classList.add('show');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Controls
+document.getElementById('thickness').addEventListener('input', e => {
+  ringPct = parseFloat(e.target.value);
+  document.getElementById('thickVal').textContent = ringPct + '%';
+  render();
+});
+document.getElementById('rotate').addEventListener('input', e => {
+  rotateDeg = parseInt(e.target.value);
+  document.getElementById('rotateVal').textContent = rotateDeg + '°';
+  render();
+});
+document.getElementById('rotateReset').addEventListener('click', () => {
+  rotateDeg = 0;
+  document.getElementById('rotate').value = 0;
+  document.getElementById('rotateVal').textContent = '0°';
+  render();
+});
+document.getElementById('zoom').addEventListener('input', e => {
+  zoomPct = parseInt(e.target.value);
+  document.getElementById('zoomVal').textContent = zoomPct + '%';
+  render();
+});
+document.getElementById('zoomReset').addEventListener('click', () => {
+  zoomPct = 100; panX = 0; panY = 0;
+  document.getElementById('zoom').value = 100;
+  document.getElementById('zoomVal').textContent = '100%';
+  render();
+});
+document.getElementById('zoomMax').addEventListener('click', () => {
+  if (!sourceImg) return;
+  const innerR = (DISPLAY / 2) * (1 - ringPct / 100);
+  const imgAspect = sourceImg.width / sourceImg.height;
+  const fitD = innerR * 2;
+
+  function margins(z) {
+    let dw, dh;
+    if (imgAspect > 1) {
+      dh = fitD * z / 100; dw = dh * imgAspect;
+    } else {
+      dw = fitD * z / 100; dh = dw / imgAspect;
+    }
+    return { mw: dw / 2 - innerR, mh: dh / 2 - innerR };
+  }
+
+  let { mw, mh } = margins(zoomPct);
+
+  // Already gap-free — do nothing
+  if (mw >= Math.abs(panX) && mh >= Math.abs(panY)) return;
+
+  if (mw >= 0 && mh >= 0) {
+    // Zoom adequate, just clamp pan
+    panX = Math.max(-mw, Math.min(mw, panX));
+    panY = Math.max(-mh, Math.min(mh, panY));
+  } else {
+    // Must zoom to at least 100, then clamp pan
+    zoomPct = 100;
+    const nm = margins(100);
+    panX = Math.max(-nm.mw, Math.min(nm.mw, panX));
+    panY = Math.max(-nm.mh, Math.min(nm.mh, panY));
+    document.getElementById('zoom').value = zoomPct;
+    document.getElementById('zoomVal').textContent = zoomPct + '%';
+  }
+  render();
+});
+
+// Shape toggle
+document.getElementById('shapeToggle').addEventListener('click', e => {
+  const btn = e.target.closest('.shape-btn');
+  if (!btn) return;
+  document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentShape = btn.dataset.shape;
+  render();
+});
+
+// Style pills
+document.getElementById('stylePills').addEventListener('click', e => {
+  const pill = e.target.closest('.style-pill');
+  if (!pill) return;
+  document.querySelectorAll('.style-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  currentStyle = pill.dataset.style;
+  render();
+});
+
+// Sync the active pill with the boot-time currentStyle (deep link).
+(function syncInitialActivePill() {
+  document.querySelectorAll('.style-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.style === currentStyle);
+  });
+})();
+
+// Click-drag repositioning
+canvas.addEventListener('mousedown', e => {
+  isDragging = true;
+  dragStartX = e.clientX - panX;
+  dragStartY = e.clientY - panY;
+  canvas.classList.add('dragging');
+});
+canvas.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  panX = e.clientX - dragStartX;
+  panY = e.clientY - dragStartY;
+  render();
+});
+canvas.addEventListener('mouseup', () => { isDragging = false; canvas.classList.remove('dragging'); });
+canvas.addEventListener('mouseleave', () => { isDragging = false; canvas.classList.remove('dragging'); });
+canvas.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  isDragging = true;
+  dragStartX = t.clientX - panX;
+  dragStartY = t.clientY - panY;
+  canvas.classList.add('dragging');
+}, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  if (!isDragging) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  panX = t.clientX - dragStartX;
+  panY = t.clientY - dragStartY;
+  render();
+}, { passive: false });
+canvas.addEventListener('touchend', () => { isDragging = false; canvas.classList.remove('dragging'); });
+
+// Download at full resolution
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  render(SIZE);
+  const link = document.createElement('a');
+  link.download = 'wick-pfp.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  render(DISPLAY); // restore preview
+});
+
+// Reset
+document.getElementById('resetBtn').addEventListener('click', () => {
+  sourceImg = null;
+  panX = 0; panY = 0;
+  fileInput.value = '';
+  dropzone.style.display = '';
+  document.getElementById('previewArea').classList.remove('show');
+  document.getElementById('controls').classList.remove('show');
+  document.getElementById('actions').classList.remove('show');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
+
+// Community Ideas widget moved to crypto.wick.pics/troll on 2026-05-18.
+</script>
+</body>
 </html>
