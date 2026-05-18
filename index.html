@@ -304,7 +304,7 @@
           <div class="style-pill" data-style="pulse" style="background: conic-gradient(#00A8FF, #0055FF, #5500FF, #9933FF, #00A8FF);" title="PulseChain"></div>
           <div class="style-pill" data-style="hex" style="background: conic-gradient(#FF00FF, #FF0033, #FF6600, #FFCC00, #FF00FF);" title="HEX"></div>
           <div class="style-pill" data-style="gold" style="background: conic-gradient(#fff5d0 0%, #ffe089 5%, #e8b234 12%, #b07710 20%, #6a4011 25%, #b07710 30%, #e8b234 38%, #ffe089 45%, #fff5d0 50%, #ffe089 55%, #e8b234 62%, #b07710 70%, #6a4011 75%, #b07710 80%, #e8b234 88%, #ffe089 95%, #fff5d0 100%);" title="Golden Crumpets"></div>
-          <div class="style-pill" data-style="warlord" style="background: conic-gradient(#4b5320 0%, #2f3517 10%, #78866b 22%, #1f2410 33%, #5b6a3a 44%, #2f3517 56%, #8b7a52 66%, #3e2a1d 78%, #4b5320 88%, #2f3517 100%);" title="Warlord"></div>
+          <div class="style-pill" data-style="warlord" style="background: radial-gradient(circle at 30% 25%, #2f3517 0 18%, transparent 22%), radial-gradient(circle at 70% 35%, #3e2a1d 0 14%, transparent 18%), radial-gradient(circle at 25% 70%, #1f2410 0 12%, transparent 16%), radial-gradient(circle at 75% 75%, #8b7a52 0 13%, transparent 17%), radial-gradient(circle at 50% 50%, #5b6a3a 0 10%, transparent 14%), #4b5320;" title="Warlord"></div>
         </div>
       </div>
     </div>
@@ -456,10 +456,106 @@ function render(outputSize) {
   // Draw gradient ring. First arg to createConicGradient is the start angle
   // in radians. Rotating it spins the color wheel WITHOUT touching the shape
   // path below — same clip mask, different chromatic offset.
-  const grad = ctx.createConicGradient(rotateDeg * Math.PI / 180, center, center);
-  STYLES[currentStyle].forEach(s => grad.addColorStop(s.stop, s.c));
+  //
+  // Special case: warlord (camo) uses layered radial-gradient blobs instead of
+  // a conic sweep. Conic gradients are fundamentally angular slices — they
+  // can't read as fabric. Real camo is irregular overlapping patches, which
+  // we get by compositing ~25 soft-edge radial blobs around the ring annulus.
+  const isCamo = currentStyle === 'warlord';
+  let grad = null;
+  if (!isCamo) {
+    grad = ctx.createConicGradient(rotateDeg * Math.PI / 180, center, center);
+    STYLES[currentStyle].forEach(s => grad.addColorStop(s.stop, s.c));
+  }
 
-  if (shape === 'hexagon') {
+  function drawCamoFill() {
+    // Olive-drab base coat
+    ctx.fillStyle = '#4b5320';
+    ctx.fillRect(0, 0, sz, sz);
+    // 22 hand-placed blobs at varied radii / sizes. Hardcoded so the pattern
+    // is stable across renders (no flicker on slider drag) yet looks irregular.
+    // Each entry: { angle (deg), radial multiplier off ring-midpoint, size scale, color }.
+    const ringMidR = (outerR + innerR) / 2;
+    const blobBase = Math.max(ringW * 1.5, sz * 0.022);
+    const blobs = [
+      // deep olive — darker shadows
+      [  18, 0.94, 1.20, '#2f3517'],
+      [  72, 1.08, 0.90, '#2f3517'],
+      [ 138, 0.92, 1.40, '#2f3517'],
+      [ 215, 1.05, 1.10, '#2f3517'],
+      [ 305, 0.98, 1.30, '#2f3517'],
+      // brown — warm patches
+      [  42, 0.90, 1.10, '#3e2a1d'],
+      [ 108, 1.04, 0.85, '#3e2a1d'],
+      [ 168, 0.96, 1.25, '#3e2a1d'],
+      [ 248, 1.06, 1.00, '#3e2a1d'],
+      [ 332, 0.92, 1.15, '#3e2a1d'],
+      // khaki tan — highlights
+      [  58, 1.10, 0.70, '#8b7a52'],
+      [ 125, 0.88, 0.85, '#8b7a52'],
+      [ 195, 1.07, 0.60, '#8b7a52'],
+      [ 270, 0.94, 0.90, '#8b7a52'],
+      [ 350, 1.08, 0.75, '#8b7a52'],
+      // near-black — deepest shadow
+      [  92, 0.93, 0.50, '#1f2410'],
+      [ 180, 1.06, 0.55, '#1f2410'],
+      [ 258, 0.91, 0.45, '#1f2410'],
+      [  10, 1.04, 0.60, '#1f2410'],
+      // mid olive — connective tissue
+      [ 158, 1.02, 0.95, '#5b6a3a'],
+      [ 290, 1.00, 1.05, '#5b6a3a'],
+      [  45, 1.06, 0.85, '#5b6a3a'],
+    ];
+    const rotRad = rotateDeg * Math.PI / 180;
+    for (let i = 0; i < blobs.length; i++) {
+      const b = blobs[i];
+      // -90° because canvas 0° points right but ring "12 o'clock" is up.
+      const ang = (b[0] - 90) * Math.PI / 180 + rotRad;
+      const cx = center + Math.cos(ang) * ringMidR * b[1];
+      const cy = center + Math.sin(ang) * ringMidR * b[1];
+      const size = blobBase * b[2] * 2.2;
+      const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, size);
+      rg.addColorStop(0.00, b[3]);
+      rg.addColorStop(0.55, b[3]);
+      rg.addColorStop(1.00, b[3] + '00');
+      ctx.fillStyle = rg;
+      ctx.fillRect(cx - size, cy - size, size * 2, size * 2);
+    }
+  }
+
+  function paintRing(fillFn, clipShape) {
+    ctx.save();
+    if (clipShape === 'hexagon') {
+      hexPath(ctx, center, center, outerR);
+    } else if (clipShape === 'square') {
+      ctx.beginPath();
+      ctx.roundRect(0, 0, sz, sz, sqRad);
+    } else {
+      ctx.beginPath();
+      ctx.arc(center, center, outerR, 0, Math.PI * 2);
+    }
+    ctx.clip();
+    fillFn();
+    ctx.restore();
+    // Cut the inner hole.
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    if (clipShape === 'hexagon') {
+      hexPath(ctx, center, center, innerR);
+    } else if (clipShape === 'square') {
+      ctx.beginPath();
+      ctx.roundRect(ringW, ringW, sz - ringW * 2, sz - ringW * 2, Math.max(0, sqRad - ringW * 0.5));
+    } else {
+      ctx.beginPath();
+      ctx.arc(center, center, innerR, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    ctx.restore();
+  }
+
+  if (isCamo) {
+    paintRing(drawCamoFill, shape);
+  } else if (shape === 'hexagon') {
     hexPath(ctx, center, center, outerR);
     ctx.save();
     ctx.clip();
