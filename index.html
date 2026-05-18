@@ -304,6 +304,7 @@
           <div class="style-pill" data-style="pulse" style="background: conic-gradient(#00A8FF, #0055FF, #5500FF, #9933FF, #00A8FF);" title="PulseChain"></div>
           <div class="style-pill" data-style="hex" style="background: conic-gradient(#FF00FF, #FF0033, #FF6600, #FFCC00, #FF00FF);" title="HEX"></div>
           <div class="style-pill" data-style="gold" style="background: conic-gradient(#fff5d0 0%, #ffe089 5%, #e8b234 12%, #b07710 20%, #6a4011 25%, #b07710 30%, #e8b234 38%, #ffe089 45%, #fff5d0 50%, #ffe089 55%, #e8b234 62%, #b07710 70%, #6a4011 75%, #b07710 80%, #e8b234 88%, #ffe089 95%, #fff5d0 100%);" title="Golden Crumpets"></div>
+          <div class="style-pill" data-style="warlord" style="background: conic-gradient(#4b5320 0%, #2f3517 10%, #78866b 22%, #1f2410 33%, #5b6a3a 44%, #2f3517 56%, #8b7a52 66%, #3e2a1d 78%, #4b5320 88%, #2f3517 100%);" title="Warlord"></div>
         </div>
       </div>
     </div>
@@ -337,7 +338,7 @@ let currentStyle = 'wick';
   const slugFromPath = (location.pathname || '').replace(/\/+$/, '').split('/').pop().toLowerCase();
   const slugFromQuery = (new URLSearchParams(location.search).get('style') || '').toLowerCase();
   const want = slugFromQuery || slugFromPath;
-  if (want && Object.prototype.hasOwnProperty.call({wick:1,fire:1,ice:1,tang:1,pulse:1,hex:1,gold:1}, want)) {
+  if (want && Object.prototype.hasOwnProperty.call({wick:1,fire:1,ice:1,tang:1,pulse:1,hex:1,gold:1,warlord:1}, want)) {
     currentStyle = want;
   }
 })();
@@ -378,6 +379,30 @@ const STYLES = {
     {stop:0.88,c:'#e8b234'},
     {stop:0.95,c:'#ffe089'},
     {stop:1.00,c:'#fff5d0'},  // wraps back to top highlight
+  ],
+  // Warlord — military camo: irregular stops + tight color jumps to read as a
+  // mottled jungle/woodland pattern around the ring. No symmetric halves; each
+  // patch ends abruptly into the next instead of bleeding so the eye reads it
+  // as fabric, not a smooth gradient.
+  warlord: [
+    {stop:0.00,c:'#4b5320'},  // olive drab
+    {stop:0.10,c:'#4b5320'},
+    {stop:0.10,c:'#2f3517'},  // hard cut → deep olive
+    {stop:0.22,c:'#2f3517'},
+    {stop:0.22,c:'#78866b'},  // hard cut → grey-green
+    {stop:0.33,c:'#78866b'},
+    {stop:0.33,c:'#1f2410'},  // hard cut → near-black
+    {stop:0.44,c:'#1f2410'},
+    {stop:0.44,c:'#5b6a3a'},  // hard cut → mid olive
+    {stop:0.56,c:'#5b6a3a'},
+    {stop:0.56,c:'#2f3517'},
+    {stop:0.66,c:'#2f3517'},
+    {stop:0.66,c:'#8b7a52'},  // hard cut → khaki tan
+    {stop:0.78,c:'#8b7a52'},
+    {stop:0.78,c:'#3e2a1d'},  // hard cut → brown
+    {stop:0.88,c:'#3e2a1d'},
+    {stop:0.88,c:'#4b5320'},  // wrap back to olive drab
+    {stop:1.00,c:'#4b5320'},
   ],
 };
 
