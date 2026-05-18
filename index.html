@@ -356,6 +356,7 @@
           <div class="style-pill" data-style="tang" style="background: conic-gradient(#FF6B00, #FF8C00, #FFA500, #FF4500, #FF6B00);" title="Tang Gang"></div>
           <div class="style-pill" data-style="pulse" style="background: conic-gradient(#00A8FF, #0055FF, #5500FF, #9933FF, #00A8FF);" title="PulseChain"></div>
           <div class="style-pill" data-style="hex" style="background: conic-gradient(#FF00FF, #FF0033, #FF6600, #FFCC00, #FF00FF);" title="HEX"></div>
+          <div class="style-pill" data-style="gold" style="background: conic-gradient(#4a2c08, #b07710, #f0b937, #ffe9a0, #f0b937, #4a2c08);" title="Golden Crumpets"></div>
         </div>
       </div>
     </div>
@@ -387,6 +388,17 @@ const ctx = canvas.getContext('2d');
 
 let sourceImg = null;
 let currentStyle = 'wick';
+
+// Deep-link: /gold (or ?style=gold) pre-selects that community. Generic so
+// other slugs (/fire, /ice, /tang, /pulse, /hex, /wick) work too.
+(function applyDeepLink() {
+  const slugFromPath = (location.pathname || '').replace(/\/+$/, '').split('/').pop().toLowerCase();
+  const slugFromQuery = (new URLSearchParams(location.search).get('style') || '').toLowerCase();
+  const want = slugFromQuery || slugFromPath;
+  if (want && Object.prototype.hasOwnProperty.call({wick:1,fire:1,ice:1,tang:1,pulse:1,hex:1,gold:1}, want)) {
+    currentStyle = want;
+  }
+})();
 let currentShape = 'circle';
 let ringPct = 5;
 let zoomPct = 100;
@@ -400,6 +412,7 @@ const STYLES = {
   tang:   [{stop:0,c:'#FF6B00'},{stop:0.25,c:'#FF8C00'},{stop:0.5,c:'#FFA500'},{stop:0.75,c:'#FF4500'},{stop:1,c:'#FF6B00'}],
   pulse:  [{stop:0,c:'#00A8FF'},{stop:0.25,c:'#0055FF'},{stop:0.5,c:'#5500FF'},{stop:0.75,c:'#9933FF'},{stop:1,c:'#00A8FF'}],
   hex:    [{stop:0,c:'#FF00FF'},{stop:0.25,c:'#FF0033'},{stop:0.5,c:'#FF6600'},{stop:0.75,c:'#FFCC00'},{stop:1,c:'#FF00FF'}],
+  gold:   [{stop:0,c:'#4a2c08'},{stop:0.2,c:'#b07710'},{stop:0.4,c:'#f0b937'},{stop:0.6,c:'#ffe9a0'},{stop:0.8,c:'#f0b937'},{stop:1,c:'#4a2c08'}],
 };
 
 function hexPath(ctx, cx, cy, r) {
@@ -619,6 +632,13 @@ document.getElementById('stylePills').addEventListener('click', e => {
   currentStyle = pill.dataset.style;
   render();
 });
+
+// Sync the active pill with the boot-time currentStyle (deep link).
+(function syncInitialActivePill() {
+  document.querySelectorAll('.style-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.style === currentStyle);
+  });
+})();
 
 // Click-drag repositioning
 canvas.addEventListener('mousedown', e => {
