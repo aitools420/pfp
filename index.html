@@ -356,7 +356,7 @@
           <div class="style-pill" data-style="tang" style="background: conic-gradient(#FF6B00, #FF8C00, #FFA500, #FF4500, #FF6B00);" title="Tang Gang"></div>
           <div class="style-pill" data-style="pulse" style="background: conic-gradient(#00A8FF, #0055FF, #5500FF, #9933FF, #00A8FF);" title="PulseChain"></div>
           <div class="style-pill" data-style="hex" style="background: conic-gradient(#FF00FF, #FF0033, #FF6600, #FFCC00, #FF00FF);" title="HEX"></div>
-          <div class="style-pill" data-style="gold" style="background: conic-gradient(#3a1f06 0%, #6a4011 7%, #b07710 15%, #e0a830 22%, #ffd966 27%, #fff5d0 30%, #ffd966 33%, #e0a830 38%, #b07710 46%, #5a3409 50%, #b07710 54%, #e0a830 62%, #ffd966 72%, #fff5d0 78%, #ffd966 83%, #e0a830 88%, #b07710 94%, #3a1f06 100%);" title="Golden Crumpets"></div>
+          <div class="style-pill" data-style="gold" style="background: conic-gradient(#fff5d0 0%, #ffe089 5%, #e8b234 12%, #b07710 20%, #6a4011 25%, #b07710 30%, #e8b234 38%, #ffe089 45%, #fff5d0 50%, #ffe089 55%, #e8b234 62%, #b07710 70%, #6a4011 75%, #b07710 80%, #e8b234 88%, #ffe089 95%, #fff5d0 100%);" title="Golden Crumpets"></div>
         </div>
       </div>
     </div>
@@ -412,27 +412,29 @@ const STYLES = {
   tang:   [{stop:0,c:'#FF6B00'},{stop:0.25,c:'#FF8C00'},{stop:0.5,c:'#FFA500'},{stop:0.75,c:'#FF4500'},{stop:1,c:'#FF6B00'}],
   pulse:  [{stop:0,c:'#00A8FF'},{stop:0.25,c:'#0055FF'},{stop:0.5,c:'#5500FF'},{stop:0.75,c:'#9933FF'},{stop:1,c:'#00A8FF'}],
   hex:    [{stop:0,c:'#FF00FF'},{stop:0.25,c:'#FF0033'},{stop:0.5,c:'#FF6600'},{stop:0.75,c:'#FFCC00'},{stop:1,c:'#FF00FF'}],
-  // Polished gold: two opposing specular highlights with shadow valleys
-  // between, the way a turned/bevelled gold ring catches light from above.
+  // Polished gold ring — only the outer annulus is visible, so the gradient
+  // is tuned for what the eye sees as it sweeps the rim. Two bright cream
+  // highlights at 12 and 6 o'clock, two soft dark-gold valleys at 3 and 9,
+  // and saturated rich gold (b07710 → e8b234) in between. No black shadows
+  // anywhere — the ring should read as metal at every angle.
   gold:   [
-    {stop:0.00,c:'#3a1f06'},  // deep shadow
-    {stop:0.07,c:'#6a4011'},
-    {stop:0.15,c:'#b07710'},
-    {stop:0.22,c:'#e0a830'},
-    {stop:0.27,c:'#ffd966'},
-    {stop:0.30,c:'#fff5d0'},  // bright specular highlight #1
-    {stop:0.33,c:'#ffd966'},
-    {stop:0.38,c:'#e0a830'},
-    {stop:0.46,c:'#b07710'},
-    {stop:0.50,c:'#5a3409'},  // shadow valley
-    {stop:0.54,c:'#b07710'},
-    {stop:0.62,c:'#e0a830'},
-    {stop:0.72,c:'#ffd966'},
-    {stop:0.78,c:'#fff5d0'},  // bright specular highlight #2
-    {stop:0.83,c:'#ffd966'},
-    {stop:0.88,c:'#e0a830'},
-    {stop:0.94,c:'#b07710'},
-    {stop:1.00,c:'#3a1f06'},  // back to deep shadow
+    {stop:0.00,c:'#fff5d0'},  // 12 o'clock — top highlight
+    {stop:0.05,c:'#ffe089'},
+    {stop:0.12,c:'#e8b234'},
+    {stop:0.20,c:'#b07710'},
+    {stop:0.25,c:'#6a4011'},  // 3 o'clock — soft valley
+    {stop:0.30,c:'#b07710'},
+    {stop:0.38,c:'#e8b234'},
+    {stop:0.45,c:'#ffe089'},
+    {stop:0.50,c:'#fff5d0'},  // 6 o'clock — bottom highlight
+    {stop:0.55,c:'#ffe089'},
+    {stop:0.62,c:'#e8b234'},
+    {stop:0.70,c:'#b07710'},
+    {stop:0.75,c:'#6a4011'},  // 9 o'clock — soft valley
+    {stop:0.80,c:'#b07710'},
+    {stop:0.88,c:'#e8b234'},
+    {stop:0.95,c:'#ffe089'},
+    {stop:1.00,c:'#fff5d0'},  // wraps back to top highlight
   ],
 };
 
