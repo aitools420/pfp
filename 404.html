@@ -5,7 +5,7 @@
   <title>ULTIMATE COMMUNITY PFP RING GENERATOR | WICK.PICS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bungee+Shade&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐸</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -766,14 +766,43 @@ canvas.addEventListener('touchmove', e => {
 }, { passive: false });
 canvas.addEventListener('touchend', () => { isDragging = false; canvas.classList.remove('dragging'); });
 
-// Download at full resolution
+// Download at full resolution.
+// Robust across browsers/devices: render full-res, then export via toBlob.
+// - Mobile: use the native share/save sheet (the reliable "Save to Photos/Files" path;
+//   iOS Safari ignores the <a download> attribute, so the old data-URL anchor did nothing there).
+// - Desktop: a real download via an object URL on an anchor that's actually in the DOM.
+// - Fallback: the original data-URL path if toBlob is unavailable.
 document.getElementById('downloadBtn').addEventListener('click', () => {
+  if (!sourceImg) return;
   render(SIZE);
-  const link = document.createElement('a');
-  link.download = 'wick-pfp.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-  render(DISPLAY); // restore preview
+  const restore = () => render(DISPLAY); // restore preview
+  const isMobile = matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  const anchorDownload = (href, revoke) => {
+    const link = document.createElement('a');
+    link.download = 'wick-pfp.png';
+    link.href = href;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    if (revoke) setTimeout(() => URL.revokeObjectURL(href), 15000);
+  };
+
+  if (!canvas.toBlob) { anchorDownload(canvas.toDataURL('image/png')); restore(); return; }
+
+  canvas.toBlob((blob) => {
+    if (!blob) { anchorDownload(canvas.toDataURL('image/png')); restore(); return; }
+    const file = new File([blob], 'wick-pfp.png', { type: 'image/png' });
+    if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'WICK PFP' })
+        .catch((e) => { if (!e || e.name !== 'AbortError') anchorDownload(URL.createObjectURL(blob), true); })
+        .finally(restore);
+      return;
+    }
+    anchorDownload(URL.createObjectURL(blob), true);
+    restore();
+  }, 'image/png');
 });
 
 // Reset
