@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <title>ULTIMATE COMMUNITY PFP RING GENERATOR | WICK.PICS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Free PFP ring generator — add a Green Wick, Tang Gang, PulseChain, HEX, fire, ice, gold or camo ring to your profile pic. 1024x1024 PNG. Runs 100% in your browser, nothing is uploaded.">
+  <meta name="theme-color" content="#1a1c24">
+  <link rel="canonical" href="https://pfp.wick.pics/">
+  <meta property="og:title" content="Ultimate Community PFP Ring Generator">
+  <meta property="og:description" content="Add a community ring to your profile pic — 8 styles, 3 shapes, 1024x1024 PNG. Free, no upload, runs in your browser.">
+  <meta property="og:url" content="https://pfp.wick.pics/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Ultimate Community PFP Ring Generator">
+  <meta name="twitter:description" content="Add a community ring to your profile pic — 8 styles, 3 shapes, 1024x1024 PNG. Free, no upload, runs in your browser.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bungee+Shade&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
@@ -53,13 +65,16 @@
       transition: all 0.2s;
       background: rgba(255,255,255,0.02);
     }
-    .dropzone:hover, .dropzone.active {
+    .dropzone:hover, .dropzone.active, .dropzone:focus-visible {
       border-color: rgba(0,255,0,0.4);
       background: rgba(0,255,0,0.03);
+      outline: none;
     }
     .dropzone-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
     .dropzone-text { color: #888; font-size: 0.85rem; }
     .dropzone-hint { color: #555; font-size: 0.75rem; margin-top: 6px; }
+    .dropzone-error { color: #f66; font-size: 0.78rem; margin-top: 10px; display: none; }
+    .dropzone-error.show { display: block; }
 
     /* Preview */
     .preview-area {
@@ -70,9 +85,10 @@
     .preview-area.show { display: block; }
     .canvas-wrap {
       display: inline-block;
+      max-width: 100%;
       box-shadow: 0 0 40px rgba(0,255,0,0.15), 0 0 80px rgba(0,255,0,0.05);
     }
-    canvas { display: block; cursor: grab; }
+    canvas { display: block; cursor: grab; max-width: 100%; height: auto; touch-action: none; }
     canvas.dragging { cursor: grabbing; }
 
     /* Shape toggle */
@@ -111,6 +127,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
       margin-bottom: 16px;
     }
     .control-row:last-child { margin-bottom: 0; }
@@ -149,9 +167,11 @@
     .style-pills {
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
     }
     .style-pill {
       width: 28px; height: 28px;
+      padding: 0;
       border-radius: 50%;
       border: 2px solid transparent;
       cursor: pointer;
@@ -159,6 +179,10 @@
     }
     .style-pill:hover { transform: scale(1.15); }
     .style-pill.active { border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+    .style-pill:focus-visible, .shape-btn:focus-visible, .btn:focus-visible, .zoom-preset-btn:focus-visible {
+      outline: 2px solid #0f0;
+      outline-offset: 2px;
+    }
 
     /* Buttons */
     .actions {
@@ -239,13 +263,14 @@
 
   <div class="container" style="margin-top:24px;">
     <h1>ULTIMATE COMMUNITY PFP RING GENERATOR</h1>
-    <p class="subtitle">Community-powered ring generator &mdash; suggest new styles below</p>
+    <p class="subtitle">8 community rings &middot; 3 shapes &middot; runs 100% in your browser &mdash; your image never leaves your device</p>
 
     <!-- Drop Zone -->
-    <div class="dropzone" id="dropzone">
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload your profile image">
       <div class="dropzone-icon">&#x1F5BC;</div>
-      <p class="dropzone-text">Drop your image here or click to browse</p>
+      <p class="dropzone-text">Drop your image here, click to browse, or paste (Ctrl+V)</p>
       <p class="dropzone-hint">PNG, JPG, WebP &mdash; outputs 1024x1024</p>
+      <p class="dropzone-error" id="dropzoneError"></p>
       <input type="file" id="fileInput" accept="image/*" style="display:none">
     </div>
 
@@ -272,7 +297,7 @@
       <div class="control-row">
         <span class="control-label">Zoom <span id="zoomVal">100%</span></span>
         <div style="display:flex;gap:6px;align-items:center;">
-          <input type="range" id="zoom" min="80" max="150" value="100" style="flex:1;">
+          <input type="range" id="zoom" min="80" max="200" value="100" style="flex:1;">
           <button class="zoom-preset-btn" id="zoomReset">Reset</button>
           <button class="zoom-preset-btn" id="zoomMax">No Gaps</button>
         </div>
@@ -295,16 +320,16 @@
         </div>
       </div>
       <div class="control-row">
-        <span class="control-label">Community</span>
+        <span class="control-label">Community <span id="styleName">Green Wick</span></span>
         <div class="style-pills" id="stylePills">
-          <div class="style-pill active" data-style="wick" style="background: conic-gradient(#0a5c1a, #10b840, #1a4d2e, #22c55e, #0a5c1a);" title="Green Wick"></div>
-          <div class="style-pill" data-style="fire" style="background: conic-gradient(#f80, #f00, #ff0, #f80);" title="Fire"></div>
-          <div class="style-pill" data-style="ice" style="background: conic-gradient(#0af, #08f, #0ff, #0af);" title="Ice"></div>
-          <div class="style-pill" data-style="tang" style="background: conic-gradient(#FF6B00, #FF8C00, #FFA500, #FF4500, #FF6B00);" title="Tang Gang"></div>
-          <div class="style-pill" data-style="pulse" style="background: conic-gradient(#00A8FF, #0055FF, #5500FF, #9933FF, #00A8FF);" title="PulseChain"></div>
-          <div class="style-pill" data-style="hex" style="background: conic-gradient(#FF00FF, #FF0033, #FF6600, #FFCC00, #FF00FF);" title="HEX"></div>
-          <div class="style-pill" data-style="gold" style="background: conic-gradient(#fff5d0 0%, #ffe089 5%, #e8b234 12%, #b07710 20%, #6a4011 25%, #b07710 30%, #e8b234 38%, #ffe089 45%, #fff5d0 50%, #ffe089 55%, #e8b234 62%, #b07710 70%, #6a4011 75%, #b07710 80%, #e8b234 88%, #ffe089 95%, #fff5d0 100%);" title="Golden Crumpets"></div>
-          <div class="style-pill" data-style="warlord" style="background: radial-gradient(circle at 30% 25%, #2f3517 0 18%, transparent 22%), radial-gradient(circle at 70% 35%, #3e2a1d 0 14%, transparent 18%), radial-gradient(circle at 25% 70%, #1f2410 0 12%, transparent 16%), radial-gradient(circle at 75% 75%, #8b7a52 0 13%, transparent 17%), radial-gradient(circle at 50% 50%, #5b6a3a 0 10%, transparent 14%), #4b5320;" title="Warlord"></div>
+          <button type="button" class="style-pill active" data-style="wick" style="background: conic-gradient(#0a5c1a, #10b840, #1a4d2e, #22c55e, #0a5c1a);" title="Green Wick" aria-label="Green Wick"></button>
+          <button type="button" class="style-pill" data-style="fire" style="background: conic-gradient(#f80, #f00, #ff0, #f80);" title="Fire" aria-label="Fire"></button>
+          <button type="button" class="style-pill" data-style="ice" style="background: conic-gradient(#0af, #08f, #0ff, #0af);" title="Ice" aria-label="Ice"></button>
+          <button type="button" class="style-pill" data-style="tang" style="background: conic-gradient(#FF6B00, #FF8C00, #FFA500, #FF4500, #FF6B00);" title="Tang Gang" aria-label="Tang Gang"></button>
+          <button type="button" class="style-pill" data-style="pulse" style="background: conic-gradient(#00A8FF, #0055FF, #5500FF, #9933FF, #00A8FF);" title="PulseChain" aria-label="PulseChain"></button>
+          <button type="button" class="style-pill" data-style="hex" style="background: conic-gradient(#FF00FF, #FF0033, #FF6600, #FFCC00, #FF00FF);" title="HEX" aria-label="HEX"></button>
+          <button type="button" class="style-pill" data-style="gold" style="background: conic-gradient(#fff5d0 0%, #ffe089 5%, #e8b234 12%, #b07710 20%, #6a4011 25%, #b07710 30%, #e8b234 38%, #ffe089 45%, #fff5d0 50%, #ffe089 55%, #e8b234 62%, #b07710 70%, #6a4011 75%, #b07710 80%, #e8b234 88%, #ffe089 95%, #fff5d0 100%);" title="Golden Crumpets" aria-label="Golden Crumpets"></button>
+          <button type="button" class="style-pill" data-style="warlord" style="background: radial-gradient(circle at 30% 25%, #2f3517 0 18%, transparent 22%), radial-gradient(circle at 70% 35%, #3e2a1d 0 14%, transparent 18%), radial-gradient(circle at 25% 70%, #1f2410 0 12%, transparent 16%), radial-gradient(circle at 75% 75%, #8b7a52 0 13%, transparent 17%), radial-gradient(circle at 50% 50%, #5b6a3a 0 10%, transparent 14%), #4b5320;" title="Warlord" aria-label="Warlord"></button>
         </div>
       </div>
     </div>
@@ -398,6 +423,11 @@ const STYLES = {
     {stop:0.88,c:'#4b5320'},  // wrap back to olive drab
     {stop:1.00,c:'#4b5320'},
   ],
+};
+
+const STYLE_NAMES = {
+  wick: 'Green Wick', fire: 'Fire', ice: 'Ice', tang: 'Tang Gang',
+  pulse: 'PulseChain', hex: 'HEX', gold: 'Golden Crumpets', warlord: 'Warlord',
 };
 
 function hexPath(ctx, cx, cy, r) {
@@ -616,27 +646,54 @@ const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 
 dropzone.addEventListener('click', () => fileInput.click());
-dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('active'); });
-dropzone.addEventListener('dragleave', () => dropzone.classList.remove('active'));
-dropzone.addEventListener('drop', e => {
+dropzone.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+});
+// Drag & drop anywhere on the page — also replaces the image after one is loaded.
+document.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('active'); });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) dropzone.classList.remove('active'); });
+document.addEventListener('drop', e => {
   e.preventDefault();
   dropzone.classList.remove('active');
   if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
 });
+// Paste an image from the clipboard (Ctrl+V / Cmd+V)
+document.addEventListener('paste', e => {
+  const item = [...(e.clipboardData ? e.clipboardData.items : [])].find(i => i.type.startsWith('image/'));
+  if (item) { e.preventDefault(); loadImage(item.getAsFile()); }
+});
 fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImage(e.target.files[0]); });
 
+function showError(msg) {
+  const el = document.getElementById('dropzoneError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
 function loadImage(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showError("That file isn't an image — PNG, JPG or WebP please.");
+    return;
+  }
+  const isHeic = /heic|heif/i.test(file.type + file.name);
   const reader = new FileReader();
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
       sourceImg = img;
+      panX = 0; panY = 0;
+      setZoom(100);
+      document.getElementById('dropzoneError').classList.remove('show');
       render();
       dropzone.style.display = 'none';
       document.getElementById('previewArea').classList.add('show');
       document.getElementById('controls').classList.add('show');
       document.getElementById('actions').classList.add('show');
     };
+    img.onerror = () => showError(isHeic
+      ? "This browser can't open HEIC photos — in Photos use Share → Copy, then paste here, or convert to JPG first."
+      : "Couldn't read that image — try a PNG, JPG or WebP.");
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
@@ -659,17 +716,24 @@ document.getElementById('rotateReset').addEventListener('click', () => {
   document.getElementById('rotateVal').textContent = '0°';
   render();
 });
-document.getElementById('zoom').addEventListener('input', e => {
-  zoomPct = parseInt(e.target.value);
+const zoomSlider = document.getElementById('zoom');
+function setZoom(v) {
+  zoomPct = Math.max(80, Math.min(200, Math.round(v)));
+  zoomSlider.value = zoomPct;
   document.getElementById('zoomVal').textContent = zoomPct + '%';
-  render();
-});
+}
+zoomSlider.addEventListener('input', e => { setZoom(parseInt(e.target.value)); render(); });
 document.getElementById('zoomReset').addEventListener('click', () => {
-  zoomPct = 100; panX = 0; panY = 0;
-  document.getElementById('zoom').value = 100;
-  document.getElementById('zoomVal').textContent = '100%';
+  setZoom(100); panX = 0; panY = 0;
   render();
 });
+// Scroll-wheel zoom on the preview
+canvas.addEventListener('wheel', e => {
+  if (!sourceImg) return;
+  e.preventDefault();
+  setZoom(zoomPct - Math.sign(e.deltaY) * 4);
+  render();
+}, { passive: false });
 document.getElementById('zoomMax').addEventListener('click', () => {
   if (!sourceImg) return;
   const innerR = (DISPLAY / 2) * (1 - ringPct / 100);
@@ -697,12 +761,10 @@ document.getElementById('zoomMax').addEventListener('click', () => {
     panY = Math.max(-mh, Math.min(mh, panY));
   } else {
     // Must zoom to at least 100, then clamp pan
-    zoomPct = 100;
+    setZoom(100);
     const nm = margins(100);
     panX = Math.max(-nm.mw, Math.min(nm.mw, panX));
     panY = Math.max(-nm.mh, Math.min(nm.mh, panY));
-    document.getElementById('zoom').value = zoomPct;
-    document.getElementById('zoomVal').textContent = zoomPct + '%';
   }
   render();
 });
@@ -724,6 +786,7 @@ document.getElementById('stylePills').addEventListener('click', e => {
   document.querySelectorAll('.style-pill').forEach(p => p.classList.remove('active'));
   pill.classList.add('active');
   currentStyle = pill.dataset.style;
+  document.getElementById('styleName').textContent = STYLE_NAMES[currentStyle];
   render();
 });
 
@@ -732,39 +795,72 @@ document.getElementById('stylePills').addEventListener('click', e => {
   document.querySelectorAll('.style-pill').forEach(p => {
     p.classList.toggle('active', p.dataset.style === currentStyle);
   });
+  document.getElementById('styleName').textContent = STYLE_NAMES[currentStyle];
 })();
 
-// Click-drag repositioning
+// Click-drag repositioning. Pan is stored in DISPLAY-space pixels; on small
+// screens the canvas is CSS-scaled below 400px, so pointer deltas must be
+// scaled up or the image lags the finger/cursor.
+function panScale() {
+  const w = canvas.getBoundingClientRect().width;
+  return w ? DISPLAY / w : 1;
+}
 canvas.addEventListener('mousedown', e => {
   isDragging = true;
-  dragStartX = e.clientX - panX;
-  dragStartY = e.clientY - panY;
+  const s = panScale();
+  dragStartX = e.clientX * s - panX;
+  dragStartY = e.clientY * s - panY;
   canvas.classList.add('dragging');
 });
 canvas.addEventListener('mousemove', e => {
   if (!isDragging) return;
-  panX = e.clientX - dragStartX;
-  panY = e.clientY - dragStartY;
+  const s = panScale();
+  panX = e.clientX * s - dragStartX;
+  panY = e.clientY * s - dragStartY;
   render();
 });
 canvas.addEventListener('mouseup', () => { isDragging = false; canvas.classList.remove('dragging'); });
 canvas.addEventListener('mouseleave', () => { isDragging = false; canvas.classList.remove('dragging'); });
+
+// Touch: one finger pans, two fingers pinch-zoom.
+let pinchStartDist = 0, pinchStartZoom = 100;
+function touchDist(e) {
+  return Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+}
 canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    isDragging = false;
+    pinchStartDist = touchDist(e);
+    pinchStartZoom = zoomPct;
+    return;
+  }
   const t = e.touches[0];
+  const s = panScale();
   isDragging = true;
-  dragStartX = t.clientX - panX;
-  dragStartY = t.clientY - panY;
+  dragStartX = t.clientX * s - panX;
+  dragStartY = t.clientY * s - panY;
   canvas.classList.add('dragging');
 }, { passive: true });
 canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2 && pinchStartDist) {
+    e.preventDefault();
+    setZoom(pinchStartZoom * touchDist(e) / pinchStartDist);
+    render();
+    return;
+  }
   if (!isDragging) return;
   e.preventDefault();
   const t = e.touches[0];
-  panX = t.clientX - dragStartX;
-  panY = t.clientY - dragStartY;
+  const s = panScale();
+  panX = t.clientX * s - dragStartX;
+  panY = t.clientY * s - dragStartY;
   render();
 }, { passive: false });
-canvas.addEventListener('touchend', () => { isDragging = false; canvas.classList.remove('dragging'); });
+canvas.addEventListener('touchend', e => {
+  if (e.touches.length === 0) pinchStartDist = 0;
+  isDragging = false;
+  canvas.classList.remove('dragging');
+});
 
 // Download at full resolution.
 // Robust across browsers/devices: render full-res, then export via toBlob.
@@ -777,10 +873,11 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
   render(SIZE);
   const restore = () => render(DISPLAY); // restore preview
   const isMobile = matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const fname = 'wick-pfp-' + currentStyle + '.png';
 
   const anchorDownload = (href, revoke) => {
     const link = document.createElement('a');
-    link.download = 'wick-pfp.png';
+    link.download = fname;
     link.href = href;
     link.rel = 'noopener';
     document.body.appendChild(link);
@@ -793,7 +890,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 
   canvas.toBlob((blob) => {
     if (!blob) { anchorDownload(canvas.toDataURL('image/png')); restore(); return; }
-    const file = new File([blob], 'wick-pfp.png', { type: 'image/png' });
+    const file = new File([blob], fname, { type: 'image/png' });
     if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file], title: 'WICK PFP' })
         .catch((e) => { if (!e || e.name !== 'AbortError') anchorDownload(URL.createObjectURL(blob), true); })
@@ -810,6 +907,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   sourceImg = null;
   panX = 0; panY = 0;
   fileInput.value = '';
+  document.getElementById('dropzoneError').classList.remove('show');
   dropzone.style.display = '';
   document.getElementById('previewArea').classList.remove('show');
   document.getElementById('controls').classList.remove('show');
